@@ -1,4 +1,15 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using ProEventos.API.Map;
+using ProEventos.API.Models.Context;
+using ProEventos.API.Repository;
+using System;
 
 namespace ProEventos.API
 {
@@ -14,11 +25,22 @@ namespace ProEventos.API
  
         public void ConfigureServices(IServiceCollection services)
         {
-         
+            var connection = Configuration["MySQlConnection:MySQlConnectionString"];
+
+            services.AddDbContext<MySQLContext>(options => options.
+                UseMySql(connection,
+                        new MySqlServerVersion(
+                            new Version(8, 0, 5))));
+
+            IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
+            services.AddSingleton(mapper);
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddScoped<IEventoRepository, EventoRepository>();
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "GeekShopping.CartAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProEventos.API", Version = "v1" });
             });
 
         }

@@ -1,77 +1,69 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ProEventos.API.DTO;
 using ProEventos.API.Models;
+using ProEventos.API.Repository;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProEventos.API.Controllers
 {
-    [Route("api/[controller]")]
+
+[Route("api/v1/[controller]")]
     [ApiController]
     public class EventoController : ControllerBase
     {
 
-        public IEnumerable<Evento> _evento = new Evento[] {
-             new Evento(){
-                    EventoId = 1,
-                    Tema = "Angular 11 .Net 5",
-                    Local = "Sala 01",
-                    Lote = "1° Lote",
-                    QtdPessoas = 250,
-                    DataEvento = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy")
-                    },
-                 new Evento(){
-                    EventoId = 2,
-                    Tema = "Angular 11 .Net 5",
-                    Local = "Sala 02",
-                    Lote = "1° Lote",
-                    QtdPessoas = 250,
-                    DataEvento = DateTime.Now.AddDays(4).ToString("dd/MM/yyyy")
-                    },
-                  new Evento(){
-                    EventoId = 3,
-                    Tema = "Angular 11 .Net 5",
-                    Local = "Sala 03",
-                    Lote = "1° Lote",
-                    QtdPessoas = 250,
-                    DataEvento = DateTime.Now.AddDays(6).ToString("dd/MM/yyyy")
-                    }
+        private IEventoRepository _repository;
 
-                };
-
-        public EventoController() 
+        public EventoController(IEventoRepository repository)
         {
-
+            _repository = repository ?? throw new  ArgumentNullException(nameof(repository));
         }
 
+
+
         [HttpGet]
-        public IEnumerable<Evento> Get()
+        public async Task<ActionResult<IEnumerable<EventoDTO>>> FindAll()
         {
-            return _evento;
+            var eventos = await _repository.FindAll();
+            return Ok (eventos);
         }
 
         [HttpGet("{id}")]
-        public IEnumerable<Evento> Get(int id)
+        public async Task<ActionResult<IEnumerable<EventoDTO>>> FindById(long id)
         {
-            return _evento.Where(e => e.EventoId == id);
+            var eventos = await _repository.FindById(id);
+            if (eventos == null) return NotFound();
+            return Ok(eventos);
         }
 
         [HttpPost]
-        public string Post(){
-        
-            return "value";
+        public async Task<ActionResult<EventoDTO>> Create([FromBody] EventoDTO vo)
+        {
+            if (vo == null) return BadRequest();
+            var eventos = await _repository.Create(vo);
+            return Ok(eventos);
         }
 
-        [HttpPut("{id}")]
-        public string Put(int id) {
 
-            return $"Exemplo de Put com id = {id}";
+        [HttpPut]
+        public async Task<ActionResult<EventoDTO>> Update([FromBody] EventoDTO vo) 
+        {
+            if (vo == null) return BadRequest();
+            var eventos = await _repository.Update(vo);
+            return Ok(eventos);
         }
 
 
         [HttpDelete("{id}")]
-        public string Delete(int id)
+        public async Task<ActionResult> Delete(long id)
         {
-
-            return $"Exemplo de Put com id = {id}";
+            var status = await _repository.Delete(id);
+            if (!status) return BadRequest();
+            return Ok(status);
         }
 
     }
